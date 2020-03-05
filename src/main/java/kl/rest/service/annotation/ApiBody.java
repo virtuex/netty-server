@@ -6,11 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 仿SpringMVC实现Mapping注解
+ * 该注解用于标识请求体
  */
-@Target({ElementType.TYPE,ElementType.METHOD})
+@Target({ElementType.TYPE,ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-
-public @interface NtRequestMapping {
-    String uri();
+public @interface ApiBody {
 }

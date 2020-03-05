@@ -1,11 +1,16 @@
 package kl.rest.service.netty.apibiz;
 
+import kl.rest.service.annotation.NtRequestMapping;
+import kl.rest.service.container.ContainerCache;
+import kl.rest.service.container.ContainerStruct;
 import kl.rest.service.util.ClassLoaderUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,6 +59,34 @@ public class BizHandlerContainer implements IBizHandlerContainer {
                     logger.error(e.getMessage(), e);
                 }
             }
+            //*****************************
+            //todo 下面是采用新方式匹配container的方法
+            //*******************************
+            NtRequestMapping annotation = claz.getAnnotation(NtRequestMapping.class);
+            if (annotation == null) {
+                continue;
+            }
+            //先获取到类注解中的路径值
+            String uri = annotation.uri();
+            if (uri.endsWith("/")) {
+                uri = uri.substring(0, uri.length() - 1);
+            }
+            Method[] methods = claz.getMethods();
+            for (Method method : methods) {
+                NtRequestMapping methodAnnotation = method.getAnnotation(NtRequestMapping.class);
+                if (methodAnnotation == null) {
+                    continue;
+                }
+                String methodUri = methodAnnotation.uri();
+                if (methodUri.startsWith("/")) {
+                    methodUri = methodUri.substring(1, methodUri.length());
+                }
+                String fullUri = uri + "/" + methodUri;
+                ContainerStruct containerStruct = new ContainerStruct(fullUri, claz, method);
+                ContainerCache.containers.put(fullUri,containerStruct);
+            }
+
+
         }
     }
 

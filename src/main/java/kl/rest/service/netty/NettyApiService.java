@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.net.ssl.KeyManagerFactory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,10 +99,6 @@ public class NettyApiService {
 			protocol = HTTPS;
 			sslContext = getSslContext();
 			break;
-		case HTTPS_TLS_PSK:
-			protocol = HTTPS;
-			sslContext = getTlsPskSslContext();
-			break;
 		default:
 		}
 		URI baseUri = URI.create(String.format("%s://%s:%d/", protocol, nettyApiCfg.getIp(), nettyApiCfg.getPort()));
@@ -122,6 +119,9 @@ public class NettyApiService {
 	public SslContext getSslContext() throws Exception {
 		KeyStore keyStore = KeyStore.getInstance("JKS");
 		FileInputStream fileInputStream = null;
+		if(nettyApiCfg.getSslStoreFile() == null){
+			throw new Exception("无法启用https服务，原因：keystore加载失败");
+		}
 		try {
 			fileInputStream = new FileInputStream(nettyApiCfg.getSslStoreFile());
 			keyStore.load(fileInputStream, nettyApiCfg.getSslStorePwd().toCharArray());
@@ -131,34 +131,7 @@ public class NettyApiService {
 			kmf.init(keyStore, nettyApiCfg.getSslStorePwd().toCharArray());
 
 			return SslContextBuilder.forServer(kmf).build();
-		} finally {
-			if(fileInputStream != null) {
-				fileInputStream.close();
-			}
-		}
-	}
-
-	public SslContext getTlsPskSslContext() throws Exception {
-		KeyStore keyStore = KeyStore.getInstance("JKS");
-		FileInputStream fileInputStream = null;
-		try {
-			fileInputStream = new FileInputStream(nettyApiCfg.getSslStoreFile());
-			keyStore.load(fileInputStream, nettyApiCfg.getSslStorePwd().toCharArray());
-
-			// 原生 netty4 框架的限制，必须初始化一个 KeyManagerFactory
-			// 虽然 使用 TLS-PSK 的时候并不需要
-			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-			kmf.init(keyStore, nettyApiCfg.getSslStorePwd().toCharArray());
-
-			// 指定支持的 PSK 算法
-			// TLS_PSK_WITH_AES_128_CBC_SHA,
-			// TLS_PSK_WITH_AES_256_CBC_SHA,
-			List<String> ciphers = new ArrayList<>(
-					Arrays.asList("TLS_PSK_WITH_AES_128_CBC_SHA", "TLS_PSK_WITH_AES_256_CBC_SHA"));
-
-			// 基于 OPENSSL 的 TLS通讯， 原生netty4 不支持 TLS-PSK， 需要定制部分内容
-			return SslContextBuilder.forServer(kmf).sslProvider(SslProvider.OPENSSL).ciphers(ciphers).build();
-		} finally {
+		}finally{
 			if(fileInputStream != null) {
 				fileInputStream.close();
 			}

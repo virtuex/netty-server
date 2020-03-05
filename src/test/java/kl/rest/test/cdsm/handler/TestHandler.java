@@ -2,6 +2,7 @@ package kl.rest.test.cdsm.handler;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import kl.rest.service.annotation.NtRequestMapping;
 import kl.rest.service.netty.apibiz.DataModelType;
 import kl.rest.service.netty.apibiz.ExtData;
 import kl.rest.service.netty.apibiz.IApiBizHandler;
@@ -10,7 +11,7 @@ import kl.rest.test.cdssr.CdssResoure;
 import java.util.HashMap;
 import java.util.Map;
 
-
+@NtRequestMapping(uri = "/test1")
 public class TestHandler implements IApiBizHandler {
 
     public static final String packagePath = TestHandler.class.getPackage().getName();
@@ -32,6 +33,7 @@ public class TestHandler implements IApiBizHandler {
 
     @SuppressWarnings("unchecked")
     @Override
+    @NtRequestMapping(uri = "/method")
     public byte[] handle(byte[] modelIn, Map<String, String> headers, Map<String, String> outHeaders, String clientIp, ExtData ext)
             throws Exception {
         outHeaders.put("CDS_RSP_TYPE", "test_Rsp");
