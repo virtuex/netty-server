@@ -1,0 +1,122 @@
+// file encoding UTF-8
+
+apply plugin: "java"
+apply plugin: "maven-publish"
+apply plugin: "war"
+apply plugin: "jacoco"
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+def groupIdParam = "kl.cds"
+def artifactIdParam = "netty_rest_server"
+def versionParam = "5.2.1-SNAPSHOT"
+
+group = "${groupIdParam}"
+version = "${versionParam}"
+
+repositories {
+    maven { url "http://mvn.koal.com:8081/nexus/content/groups/public/" }
+}
+
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+
+configurations {
+    env
+    ocx
+}
+
+dependencies {
+
+
+    compile "io.netty:netty-all:4.1.9.Final.kl"
+
+    compile "org.apache.commons:commons-lang3:3.4"
+    compile 'org.slf4j:slf4j-api:1.6.6'
+
+    testCompile "junit:junit:4.12"
+    testCompile 'com.google.code.gson:gson:2.3.1'
+    testCompile "org.slf4j:slf4j-log4j12:1.6.6"
+}
+
+// 要将java下的html、js等文件加入包中
+sourceSets {
+    main {
+        java { srcDir 'src/main/java' }
+        resources {
+            srcDirs 'src/main/java'
+            srcDirs 'src/main/resources'
+            exclude '**/*.java'
+        }
+    }
+    test {
+        java { srcDir 'src/test/java' }
+        resources {
+            srcDirs 'src/test/java'
+            srcDirs 'src/test/resources'
+            exclude '**/*.java'
+        }
+    }
+}
+
+jar {
+    baseName = "${artifactIdParam}"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    baseName = "${artifactIdParam}"
+    from sourceSets.main.allSource
+    from sourceSets.test.allSource
+}
+// javadoc
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    baseName = "${artifactIdParam}"
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+}
+
+publishing {
+    repositories {
+        if (!"${version}".contains("SNAPSHOT")) {
+            println "${group} : ${version}"
+            maven {
+                url "http://mvn.koal.com:8081/nexus/content/repositories/releases/"
+                credentials {
+                    username = "admin"
+                    password = "admin123"
+                }
+            }
+        } else {
+            println "${group} : ${version} : SNAPSHOT"
+            maven {
+                url "http://mvn.koal.com:8081/nexus/content/repositories/snapshots/"
+                credentials {
+                    username = "admin"
+                    password = "admin123"
+                }
+            }
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            groupId "${group}"
+            artifactId "${artifactIdParam}"
+
+            from components.java
+
+            artifact sourcesJar
+        }
+    }
+}
