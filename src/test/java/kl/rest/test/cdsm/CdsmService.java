@@ -2,8 +2,10 @@ package kl.rest.test.cdsm;
 
 import kl.rest.service.netty.APIProtocol;
 import kl.rest.service.netty.NettyApiService;
+import kl.rest.service.netty.apibiz.ApiBizErrorHandlerFactory;
 import kl.rest.service.netty.apibiz.BizHandlerContainer;
 import kl.rest.service.netty.cfg.NettyApiCfg;
+import kl.rest.service.netty.handler.DefaultApiErrorHandler;
 import kl.rest.test.cdsm.handler.ehandler.NettyCont;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +22,7 @@ public class CdsmService {
 		NettyApiService.getInstance().setNettyApiCfg(apiCfg);
 		//todo 这里通过add的方式不合理，增加了复杂度，后期需要改成在netty启动阶段进行扫描，扫描路径可自定配置或者就从根包下开始扫描
 		BizHandlerContainer.getInstance().addHandlerContainer(NettyCont.class.getPackage().getName());
-
+		ApiBizErrorHandlerFactory.getInstance().setApiBizErrorHandler(new DefaultApiErrorHandler());
 		NettyApiService.getInstance().start();
 		logger.info(" http service started");
 	}

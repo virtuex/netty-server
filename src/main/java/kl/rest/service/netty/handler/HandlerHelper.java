@@ -12,10 +12,7 @@ import org.slf4j.Logger;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class HandlerHelper {
@@ -168,6 +165,15 @@ public class HandlerHelper {
         return response;
     }
 
+
+    /**
+     * todo 发生异常时的处理
+     * @param response
+     * @param resource
+     * @param cause
+     * @return
+     * @throws Exception
+     */
     public static FullHttpResponse createErrorResponse(FullHttpResponse response,
                                                        String resource,
                                                        Throwable cause) throws Exception {
@@ -193,9 +199,22 @@ public class HandlerHelper {
         return HandlerHelper.createBisResponse(response, HttpResponseStatus.OK, modelType, errorOut);
     }
 
+    /**
+     * 获取请求头，这里如果httpHeaders为空，那就把所有的头都取出来
+     *
+     * @param request
+     * @param httpHeaders
+     * @return
+     */
     public static Map<String, String> getHttpHeaders(FullHttpRequest request, String[] httpHeaders) {
         Map<String, String> mapHeaders = new LinkedHashMap<String, String>();
-        if (httpHeaders == null) {
+        if (httpHeaders == null || httpHeaders.length == 0) {
+            HttpHeaders headers = request.headers();
+            Iterator<Map.Entry<String, String>> iterator = headers.entries().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> next = iterator.next();
+                mapHeaders.put(next.getKey(), next.getValue());
+            }
             return mapHeaders;
         }
         for (String header : httpHeaders) {

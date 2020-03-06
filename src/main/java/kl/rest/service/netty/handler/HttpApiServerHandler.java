@@ -6,6 +6,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import kl.rest.service.annotation.ApiHeader;
 import kl.rest.service.container.ContainerCache;
 import kl.rest.service.container.ContainerStruct;
 import kl.rest.service.netty.apibiz.ApiBizLoggerHandlerFactory;
@@ -21,6 +22,9 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.Map;
 
 
@@ -65,19 +69,31 @@ public class HttpApiServerHandler extends SimpleChannelInboundHandler<HttpObject
             resource = resource.substring(0, indexOfQuestionMark);
         }
         ///*************************************************************
-        //todo 下面代码为重构部分
+        //todo 下面代码为重构部分,当前以实现为主，稍后重构
         ContainerStruct containerStruct = ContainerCache.containers.get(resource);
         if (containerStruct == null) {
             response.setStatus(HttpResponseStatus.NOT_FOUND);
-        }else {
+        } else {
             Class clazz = containerStruct.getClazz();
-            Object invoke = containerStruct.getMethod().invoke(clazz.newInstance());
-            byte[] rspbytes = HandlerHelper.convertRspDataToByte(invoke);
+            Method method = containerStruct.getMethod();
             // 获取标准头部信息
             Map<String, String> inHeaders = HandlerHelper.getHttpHeaders(request,
-                    new String[]{apiHeader.getClientIp()});
+                    new String[]{});
+            Parameter[] parameters =method.getParameters();
+            Object[] objects = new Object[parameters.length];
+            int index = 0;
+            for (Parameter parameter : parameters) {
+                ApiHeader annotation = parameter.getAnnotation(ApiHeader.class);
+                if(annotation == null){
+                    objects[index++] = null;
+                    continue;
+                }
+                objects[index++] = inHeaders;
 
-             response = HandlerHelper.createBisResponse(response, HttpResponseStatus.OK, DataModelType.JSON, rspbytes);
+            }
+            Object invoke = method.invoke(clazz.newInstance(),objects);
+            byte[] rspbytes = HandlerHelper.convertRspDataToByte(invoke);
+            response = HandlerHelper.createBisResponse(response, HttpResponseStatus.OK, DataModelType.JSON, rspbytes);
 
         }
         //        ext.getLoggerHandler().setResponse(response);
@@ -193,17 +209,18 @@ public class HttpApiServerHandler extends SimpleChannelInboundHandler<HttpObject
 
     /**
      * 将对象序列化，方便写进响应
+     *
      * @param obj
      * @return
      */
-    public byte[] toByteArray (Object obj) {
+    public byte[] toByteArray(Object obj) {
         byte[] bytes = null;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {
             ObjectOutputStream oos = new ObjectOutputStream(bos);
             oos.writeObject(obj);
             oos.flush();
-            bytes = bos.toByteArray ();
+            bytes = bos.toByteArray();
             oos.close();
             bos.close();
         } catch (IOException ex) {
