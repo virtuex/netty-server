@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 
@@ -168,6 +169,7 @@ public class HandlerHelper {
 
     /**
      * todo 发生异常时的处理
+     *
      * @param response
      * @param resource
      * @param cause
@@ -263,8 +265,33 @@ public class HandlerHelper {
     }
 
 
+    /**
+     * 查询公共信息时，modelIn为空，此时返回空map
+     *
+     * @param modelIn
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> handleInData(byte[] modelIn) throws Exception {
+        if (modelIn == null || modelIn.length == 0) {
+            return new HashMap<>(16);
+        }
+        Map<String, Object> req = JSONUtil.toMap(new String(modelIn, StandardCharsets.UTF_8));
+        if (req == null) {
+            throw new Exception("请求为空");
+        }
+        // 禁止修改 req，便于记录日志
+        return Collections.unmodifiableMap(req);
+
+    }
+
+
+
+
     public static byte[] convertRspDataToByte(Object object) throws Exception {
         return JSONUtil.toJSONBytes(object);
     }
+
 
 }

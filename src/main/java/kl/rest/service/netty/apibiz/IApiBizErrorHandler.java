@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * 异常处理接口
  * 
- * @author huangff
+ * @author
  *
  */
 public interface IApiBizErrorHandler {

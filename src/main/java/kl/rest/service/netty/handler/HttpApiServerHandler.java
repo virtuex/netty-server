@@ -4,9 +4,13 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import kl.rest.service.annotation.ApiBody;
 import kl.rest.service.annotation.ApiHeader;
+import kl.rest.service.annotation.UriParamter;
 import kl.rest.service.container.ContainerCache;
 import kl.rest.service.container.ContainerStruct;
 import kl.rest.service.netty.apibiz.ApiBizLoggerHandlerFactory;
@@ -19,13 +23,13 @@ import kl.rest.service.util.ClientUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 public class HttpApiServerHandler extends SimpleChannelInboundHandler<HttpObject> {
@@ -37,6 +41,7 @@ public class HttpApiServerHandler extends SimpleChannelInboundHandler<HttpObject
     private FullHttpResponse response;
     private FullHttpRequest request;
     private String resource;
+    private String uriSubfix;
     private NettyApiCfg nettyApiCfg;
     private ExtData ext = new ExtData();
 
@@ -65,12 +70,31 @@ public class HttpApiServerHandler extends SimpleChannelInboundHandler<HttpObject
 
         resource = request.uri();
         int indexOfQuestionMark = resource.indexOf("?");
+        Map<String, String> paramterMap = null;
         if (indexOfQuestionMark > -1) {
+            uriSubfix = resource.substring(indexOfQuestionMark + 1);
+            //得到key=value的形式
+            String[] split = uriSubfix.split("&");
+            paramterMap = new HashMap<>();
+            for (String keyValue : split) {
+                //讲key=value拆开，得到的数组如果不为2，那说明参数不合法，跳过
+                String[] keyValueArray = keyValue.split("=");
+                if (keyValueArray.length != 2) {
+                    continue;
+                }
+                paramterMap.put(keyValueArray[0], keyValueArray[1]);
+            }
             resource = resource.substring(0, indexOfQuestionMark);
         }
         ///*************************************************************
         //todo 下面代码为重构部分,当前以实现为主，稍后重构
+        //去除请求body
+        byte[] modelIn = HandlerHelper.createBisRequest(request);
+        Map<String, Object> reqBody = HandlerHelper.handleInData(modelIn);
+
         ContainerStruct containerStruct = ContainerCache.containers.get(resource);
+        String sessionId = null;
+        String cookieString = request.headers().get(HttpHeaderNames.COOKIE);
         if (containerStruct == null) {
             response.setStatus(HttpResponseStatus.NOT_FOUND);
         } else {
@@ -79,64 +103,76 @@ public class HttpApiServerHandler extends SimpleChannelInboundHandler<HttpObject
             // 获取标准头部信息
             Map<String, String> inHeaders = HandlerHelper.getHttpHeaders(request,
                     new String[]{});
-            Parameter[] parameters =method.getParameters();
+
+            if (cookieString != null && cookieString.length() > 0) {
+                Set<Cookie> cookies = ServerCookieDecoder.LAX.decode(cookieString);
+                for (Cookie cookie : cookies) {
+                    if (apiHeader.getSessionIdKey().equalsIgnoreCase(cookie.name())) {
+                        sessionId = cookie.value();
+                        inHeaders.put(apiHeader.getSessionIdKey(), sessionId);
+                        break;
+                    }
+                }
+            }
+            Parameter[] parameters = method.getParameters();
             Object[] objects = new Object[parameters.length];
             int index = 0;
             for (Parameter parameter : parameters) {
-                ApiHeader annotation = parameter.getAnnotation(ApiHeader.class);
-                if(annotation == null){
+                //这里默认每个参数只能有一个注解
+                Annotation[] annotations = parameter.getAnnotations();
+                if (annotations == null) {
                     objects[index++] = null;
                     continue;
                 }
-                objects[index++] = inHeaders;
+                if (annotations[0] instanceof ApiHeader) {
+                    objects[index++] = inHeaders;
+                }
+
+                if (annotations[0] instanceof ApiBody) {
+                    objects[index++] = reqBody;
+                }
+
+                if (annotations[0] instanceof UriParamter) {
+                    UriParamter uriParamter = (UriParamter) annotations[0];
+                    String value = uriParamter.value();
+                    Class<?> type = parameter.getType();
+                    //todo 这里的写法很蠢，需要重构
+                    if (paramterMap == null) {
+                        continue;
+                    }
+                    if (Integer.class.equals(type)) {
+                        objects[index++] = Integer.valueOf(paramterMap.get(value));
+                    }
+                    if (Long.class.equals(type)) {
+                        objects[index++] = Long.valueOf(paramterMap.get(value));
+                    }
+                    if (String.class.equals(type)) {
+                        objects[index++] = paramterMap.get(value);
+                    }
+
+                }
 
             }
-            Object invoke = method.invoke(clazz.newInstance(),objects);
+            Object invoke = method.invoke(clazz.newInstance(), objects);
             byte[] rspbytes = HandlerHelper.convertRspDataToByte(invoke);
             response = HandlerHelper.createBisResponse(response, HttpResponseStatus.OK, DataModelType.JSON, rspbytes);
 
         }
-        //        ext.getLoggerHandler().setResponse(response);
-//        ext.getLoggerHandler().log();
-//
 //        while (!ctx.channel().isWritable()) {
 //            sleep(100);
 //        }
         ///**************************************************************
-//        IApiBizHandler handler = container.getHandler(resource);
-//
-//        if (handler == null) {
-//            // 404
-//            throw new Exception("未知错误");
-//        }
-//        // 获取标准头部信息
-////        Map<String, String> inHeaders = HandlerHelper.getHttpHeaders(request,
-////                new String[]{ apiHeader.getClientIp()});
-//        // 获取session-id信息
-//        String sessionId = null;
-//        String cookieString = request.headers().get(HttpHeaderNames.COOKIE);
-//        if (cookieString != null && cookieString.length() > 0) {
-//            Set<Cookie> cookies = ServerCookieDecoder.LAX.decode(cookieString);
-//            for (Cookie cookie : cookies) {
-//                if (apiHeader.getSessionIdKey().equalsIgnoreCase(cookie.name())) {
-//                    sessionId = cookie.value();
-//                    inHeaders.put(apiHeader.getSessionIdKey(), sessionId);
-//                    break;
-//                }
-//            }
-//        }
-//
+
 //        // 从http头中获取标准的 header 信息
 //        inHeaders.putAll(HandlerHelper.getHttpHeaders(request, handler.httpHeaders()));
 //        // 从url中获取参数信息，并且放入 headers
 //        inHeaders.putAll(HandlerHelper.getHttpHeadersFromUrl(request, handler.httpHeaders()));
 //
 //        byte[] modelIn = HandlerHelper.createBisRequest(request);
-//        Map<String, String> outHeaders = new LinkedHashMap<>();
-//        byte[] modelOut = handler.handle(modelIn, inHeaders, outHeaders, clientIp, ext);
+        Map<String, String> outHeaders = new LinkedHashMap<>();
 //
 //        // 设置头部信息和cookie
-//        parseHttpHeaders(outHeaders, sessionId);
+        parseHttpHeaders(outHeaders, sessionId);
 //
 //        response = HandlerHelper.createBisResponse(response, HttpResponseStatus.OK, handler.getModelType(), modelOut);
 //        ext.getLoggerHandler().setResponse(response);
@@ -205,29 +241,4 @@ public class HttpApiServerHandler extends SimpleChannelInboundHandler<HttpObject
             response.headers().set(key, value);
         }
     }
-
-
-    /**
-     * 将对象序列化，方便写进响应
-     *
-     * @param obj
-     * @return
-     */
-    public byte[] toByteArray(Object obj) {
-        byte[] bytes = null;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try {
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(obj);
-            oos.flush();
-            bytes = bos.toByteArray();
-            oos.close();
-            bos.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return bytes;
-    }
-
-
 }

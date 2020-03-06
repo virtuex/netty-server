@@ -4,7 +4,7 @@ import kl.rest.service.constant.ApiHeaderKey;
 
 /**
  * 默认的api头参数，通过reqtype识别接口
- * @author wumc
+ * @author
  *
  */
 public class DefaultApiHeaderImpl implements IApiHeader {

@@ -7,7 +7,7 @@ import kl.rest.service.netty.APIProtocol;
 /**
  * 服务配置文件
  *
- * @author huangff
+ * @author
  */
 public class NettyApiCfg {
 
@@ -25,6 +25,11 @@ public class NettyApiCfg {
      * netty服务的单次最大接受内容长度，单位字节byte，默认5M
      */
     private int maxContentLength = 5 * 1024 * 1024;
+
+    /**
+     * 设置注解扫描起始包
+     */
+    private String baseScannerPkg;
 
     private IApiHeader apiHeaderKey = new DefaultApiHeaderImpl();
 
@@ -153,6 +158,14 @@ public class NettyApiCfg {
 
     public void setWriterIdleTime(long writerIdleTime) {
         this.writerIdleTime = writerIdleTime;
+    }
+
+    public String getBaseScannerPkg() {
+        return baseScannerPkg;
+    }
+
+    public void setBaseScannerPkg(String baseScannerPkg) {
+        this.baseScannerPkg = baseScannerPkg;
     }
 
     @Override

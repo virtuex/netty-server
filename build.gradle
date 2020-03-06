@@ -1,12 +1,8 @@
-// file encoding UTF-8
-
 apply plugin: "java"
 apply plugin: "maven-publish"
 apply plugin: "war"
 apply plugin: "jacoco"
 
-//sourceCompatibility = 1.8
-//targetCompatibility = 1.8
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
@@ -15,7 +11,9 @@ group = "netty-http"
 version = "0.1-alpha"
 
 repositories {
-    maven { url "http://mvn.koal.com:8081/nexus/content/groups/public/" }
+    jcenter()
+    mavenCentral()
+
 }
 
 dependencies {

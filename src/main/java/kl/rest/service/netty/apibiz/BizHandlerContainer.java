@@ -3,6 +3,7 @@ package kl.rest.service.netty.apibiz;
 import kl.rest.service.annotation.NtRequestMapping;
 import kl.rest.service.container.ContainerCache;
 import kl.rest.service.container.ContainerStruct;
+import kl.rest.service.netty.handler.DefaultApiErrorHandler;
 import kl.rest.service.util.ClassLoaderUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -17,9 +18,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created by Reapsn on 2016/9/30.
- */
 public class BizHandlerContainer implements IBizHandlerContainer {
 
     private static final Logger logger = LoggerFactory.getLogger(BizHandlerContainer.class);
@@ -74,10 +72,14 @@ public class BizHandlerContainer implements IBizHandlerContainer {
                 }
                 String fullUri = uri + "/" + methodUri;
                 ContainerStruct containerStruct = new ContainerStruct(fullUri, claz, method);
-                ContainerCache.containers.put(fullUri,containerStruct);
+                ContainerCache.containers.put(fullUri, containerStruct);
             }
+            logger.info("Handler load success!");
+            //还需要添加默认的错误处理方法
+            //todo 这里将来需要支持自定义的错误处理
+            ApiBizErrorHandlerFactory.getInstance().setApiBizErrorHandler(new DefaultApiErrorHandler());
 
-
+            logger.info("Error handler load success!");
         }
     }
 }

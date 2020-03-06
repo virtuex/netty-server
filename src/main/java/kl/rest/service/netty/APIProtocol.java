@@ -1,8 +1,6 @@
 package kl.rest.service.netty;
 
-/**
- * Created by gaodq on 2017/4/1.
- */
+
 public enum APIProtocol {
     /**
      *
@@ -17,6 +15,16 @@ public enum APIProtocol {
 
     public boolean isHTTPS() {
         return this.name().toUpperCase().contains("HTTPS");
+    }
+
+    public static APIProtocol getProtcal(String name) {
+        if(HTTP.name().equals(name.toUpperCase())){
+            return HTTP;
+        }
+        if(HTTPS.name().equals(name.toUpperCase())){
+            return HTTPS;
+        }
+        return HTTP;
     }
 
 }

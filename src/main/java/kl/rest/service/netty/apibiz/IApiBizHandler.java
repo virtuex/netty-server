@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * 业务处理接口
  *
- * @author huangff
+ * @author
  */
 public interface IApiBizHandler {
 

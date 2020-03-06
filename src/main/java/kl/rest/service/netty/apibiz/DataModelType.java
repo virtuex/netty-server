@@ -3,7 +3,7 @@ package kl.rest.service.netty.apibiz;
 /**
  * 定义数据类型
  * 
- * @author huangff
+ * @author
  *
  */
 public enum DataModelType {

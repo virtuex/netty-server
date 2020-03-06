@@ -4,7 +4,7 @@ import kl.rest.service.constant.ApiHeaderKey;
 
 /**
  * 通过uri的方式识别接口
- * @author wumc
+ * @author
  *
  */
 public class UriApiHeaderImpl implements IApiHeader {

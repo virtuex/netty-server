@@ -3,7 +3,7 @@ package kl.rest.service.netty.apibiz;
 import java.util.HashMap;
 
 /**
- * @author gaodq on 2018/11/27
+ * @author
  */
 public class ExtData extends HashMap<String, Object> {
 

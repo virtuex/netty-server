@@ -3,7 +3,7 @@ package kl.rest.service.netty.apibiz;
 /**
  * API异常情况的处理
  *
- * @author huangff
+ * @author
  */
 public class ApiBizErrorHandlerFactory {
     private static final ApiBizErrorHandlerFactory INSTANCE = new ApiBizErrorHandlerFactory();

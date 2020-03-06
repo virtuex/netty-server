@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by gaodq on 2017/1/17.
+ *
  */
 public class HttpObjectAggregatorHandler extends HttpObjectAggregator {
 

@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author gaodq on 2018/11/26
+ * @author
  */
 public class BaseLoggerHandler {
 
