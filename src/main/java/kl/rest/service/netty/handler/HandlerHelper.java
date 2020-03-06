@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.*;
 import kl.rest.service.netty.apibiz.ApiBizErrorHandlerFactory;
 import kl.rest.service.netty.apibiz.DataModelType;
 import kl.rest.service.netty.apibiz.IApiBizErrorHandler;
+import kl.rest.service.util.JSONUtil;
 import org.slf4j.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -241,4 +242,10 @@ public class HandlerHelper {
     public static Map<? extends String, ? extends String> getHttpHeadersFromUrl(FullHttpRequest request, String[] httpHeaders) {
         return getHttpHeaders(getUrlParameters(request), httpHeaders);
     }
+
+
+    public static byte[] convertRspDataToByte(Object object) throws Exception {
+        return JSONUtil.toJSONBytes(object);
+    }
+
 }

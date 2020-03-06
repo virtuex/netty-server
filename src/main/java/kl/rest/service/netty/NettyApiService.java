@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.net.ssl.KeyManagerFactory;
 
+import kl.rest.service.util.ClassLoaderUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,6 +103,10 @@ public class NettyApiService {
 		default:
 		}
 		URI baseUri = URI.create(String.format("%s://%s:%d/", protocol, nettyApiCfg.getIp(), nettyApiCfg.getPort()));
+		//执行类扫描，找出符合条件的handler（使用NtMapping注解）
+		//todo 名字需要修改
+//		ClassLoaderUtil.getClasses()
+
 		try {
 			this.server = new NettyHttpServerBuilder(nettyApiCfg.getApiProtocol(), nettyApiCfg)
 					.setSslContext(sslContext).build();

@@ -50,15 +50,6 @@ public class BizHandlerContainer implements IBizHandlerContainer {
         Iterator<Class<?>> it = handleClasses.iterator();
         while (it.hasNext()) {
             Class<?> claz = it.next();
-            if (!claz.isInterface() && !Modifier.isAbstract(claz.getModifiers())
-                    && IApiBizHandler.class.isAssignableFrom(claz)) {
-                try {
-                    // 添加时判断实现有无参构造方法
-                    addHandler((Class<? extends IApiBizHandler>) claz);
-                } catch (Exception e) {
-                    logger.error(e.getMessage(), e);
-                }
-            }
             //*****************************
             //todo 下面是采用新方式匹配container的方法
             //*******************************
@@ -88,40 +79,5 @@ public class BizHandlerContainer implements IBizHandlerContainer {
 
 
         }
-    }
-
-    @Override
-    public IApiBizHandler getHandler(String resource) {
-        // 保障子类资源可以通过属性共享，每次都是一个新对象
-        Constructor<? extends IApiBizHandler> handler = handlers.get(resource);
-        if (handler == null) {
-            return null;
-        }
-        try {
-            return handler.newInstance();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            return null;
-        }
-    }
-
-    @Override
-    public synchronized void addHandler(IApiBizHandler handler) throws Exception {
-        handlers.put(handler.resource(), handler.getClass().getConstructor());
-    }
-
-    public synchronized void addHandler(Class<? extends IApiBizHandler> claz) throws Exception {
-        addHandler(claz.getConstructor());
-    }
-
-    public synchronized void addHandler(Constructor<? extends IApiBizHandler>... constructors) throws Exception {
-        for (Constructor<? extends IApiBizHandler> constructor :
-                constructors) {
-            handlers.put(constructor.newInstance().resource(), constructor);
-        }
-    }
-
-    public void reset() {
-        handlers.clear();
     }
 }
