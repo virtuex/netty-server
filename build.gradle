@@ -1,7 +1,4 @@
 apply plugin: "java"
-apply plugin: "maven-publish"
-apply plugin: "war"
-apply plugin: "jacoco"
 apply plugin: 'maven'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -17,7 +14,6 @@ repositories {
 }
 
 dependencies {
-
 
     // https://mvnrepository.com/artifact/io.netty/netty-all
     compile group: 'io.netty', name: 'netty-all', version: '4.1.9.Final'
