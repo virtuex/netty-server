@@ -1,15 +1,13 @@
 package com.xudean.server.netty.apibiz;
 
 import com.xudean.server.annotation.NtRequestMapping;
-import com.xudean.server.container.ContainerCache;
-import com.xudean.server.container.ContainerStruct;
+import com.xudean.server.model.ContainerStruct;
 import com.xudean.server.netty.handler.DefaultApiErrorHandler;
 import com.xudean.server.util.ClassLoaderUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,7 +21,7 @@ public class BizHandlerContainer implements IBizHandlerContainer {
     /**
      * 使用构造器，比直接 class.newInstance 效率更高
      */
-    private final Map<String, Constructor<? extends IApiBizHandler>> handlers = new HashMap<>();
+    private static Map<String, ContainerStruct> containers = new HashMap<>();
 
     private static final BizHandlerContainer INSTANCE = new BizHandlerContainer();
 
@@ -70,7 +68,7 @@ public class BizHandlerContainer implements IBizHandlerContainer {
                 }
                 String fullUri = uri + "/" + methodUri;
                 ContainerStruct containerStruct = new ContainerStruct(fullUri, claz, method);
-                ContainerCache.containers.put(fullUri, containerStruct);
+                containers.put(fullUri, containerStruct);
             }
             logger.info("Handler load success!");
             //还需要添加默认的错误处理方法
@@ -79,5 +77,13 @@ public class BizHandlerContainer implements IBizHandlerContainer {
 
             logger.info("Error handler load success!");
         }
+    }
+
+    public  Map<String, ContainerStruct> getContainers() {
+        return containers;
+    }
+
+    public  void setContainers(Map<String, ContainerStruct> containers) {
+        BizHandlerContainer.containers = containers;
     }
 }

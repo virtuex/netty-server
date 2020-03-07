@@ -1,4 +1,4 @@
-package com.xudean.server.container;
+package com.xudean.server.model;
 
 import java.lang.reflect.Method;
 

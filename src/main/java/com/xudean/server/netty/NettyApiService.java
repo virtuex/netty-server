@@ -93,7 +93,7 @@ public class NettyApiService {
         try {
             this.server = new NettyHttpServerBuilder(nettyApiCfg.getApiProtocol(), nettyApiCfg)
                     .setSslContext(sslContext).build();
-            logger.info(String.format("REST API Service start successfully: {%s}", baseUri));
+            logger.info(String.format("Server start successfully: {%s}", baseUri));
         } catch (Exception e) {
             try {
                 NettyApiService.this.stop();
@@ -132,7 +132,7 @@ public class NettyApiService {
             this.server.close().sync();
             this.server = null;
         }
-        logger.info("REST API Service stop successfully");
+        logger.info("Server stop successfully");
 
     }
 

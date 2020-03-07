@@ -1,8 +1,8 @@
 package com.xudean.server.netty.handler;
 
 import com.xudean.server.annotation.UriParamter;
-import com.xudean.server.container.ContainerCache;
-import com.xudean.server.container.ContainerStruct;
+import com.xudean.server.model.ContainerStruct;
+import com.xudean.server.netty.apibiz.*;
 import com.xudean.server.util.ClientUtil;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,10 +14,6 @@ import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import com.xudean.server.annotation.ApiBody;
 import com.xudean.server.annotation.ApiHeader;
-import com.xudean.server.netty.apibiz.ApiBizLoggerHandlerFactory;
-import com.xudean.server.netty.apibiz.DataModelType;
-import com.xudean.server.netty.apibiz.ExtData;
-import com.xudean.server.netty.apibiz.IBizHandlerContainer;
 import com.xudean.server.netty.cfg.IApiHeader;
 import com.xudean.server.netty.cfg.NettyApiCfg;
 import org.slf4j.Logger;
@@ -92,7 +88,7 @@ public class HttpApiServerHandler extends SimpleChannelInboundHandler<HttpObject
         byte[] modelIn = HandlerHelper.createBisRequest(request);
         Map<String, Object> reqBody = HandlerHelper.handleInData(modelIn);
 
-        ContainerStruct containerStruct = ContainerCache.containers.get(resource);
+        ContainerStruct containerStruct = BizHandlerContainer.getInstance().getContainers().get(resource);
         String sessionId = null;
         String cookieString = request.headers().get(HttpHeaderNames.COOKIE);
         if (containerStruct == null) {
