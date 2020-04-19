@@ -7,8 +7,11 @@ import org.apache.commons.lang3.StringUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 
-public class ClientUtil {
 
+public class ClientUtil {
+	/**
+	 * 如果是代理，取出真实IP
+	 */
 	public static String getClientIP(ChannelHandlerContext ctx, FullHttpRequest request) {
 		// 获取客户端IP，记录日志使用
 		String clientIP = request.headers().get("X-Forwarded-For");

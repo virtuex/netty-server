@@ -2,11 +2,10 @@ package com.xudean.server.util;
 
 public class BooleanUtils {
     public static boolean string2Boolean(String strBool) {
-        switch (strBool) {
+        switch (strBool.toLowerCase()) {
             case "true":
-                return true;
             case "1":
-                return true;
+                return Boolean.TRUE;
         }
         return false;
     }
