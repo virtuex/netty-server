@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 
 import javax.net.ssl.KeyManagerFactory;
 
+import com.google.common.io.Resources;
 import com.xudean.server.constant.NettyConfigKey;
 import com.xudean.server.netty.apibiz.BizHandlerContainer;
 import com.xudean.server.util.BooleanUtils;
@@ -151,7 +152,8 @@ public class NettyApiService {
         String protacl = bundle.getString(NettyConfigKey.APIP_ROTOCOL);
         nettyApiCfg.setApiProtocol(APIProtocol.getProtcal(protacl));
         //keystore路径
-        nettyApiCfg.setSslStoreFile(new File(bundle.getString(NettyConfigKey.SSL_STOREFILE_PATH)));
+        String file = Resources.getResource(bundle.getString(NettyConfigKey.SSL_STOREFILE_PATH)).getFile();
+        nettyApiCfg.setSslStoreFile(new File(file));
 
         nettyApiCfg.setSslStorePwd(bundle.getString(NettyConfigKey.SSL_STORE_PWD));
 
